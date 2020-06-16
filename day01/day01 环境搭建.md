@@ -469,7 +469,7 @@ windows: C:\go\
 
 ## 4.开发工具
 
-- Goland，IDE（继承开发环境）【收费】
+- Goland，IDE（集成开发环境）【收费】
 - vscode，编辑器 + 第三发组件  【免费】
 
 
