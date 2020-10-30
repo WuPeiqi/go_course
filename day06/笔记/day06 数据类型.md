@@ -977,6 +977,337 @@ func hashGrow(t *maptype, h *hmap) {
 
 
 
+## 3.指针
+
+指针，是一种数据类型，用于表示数据的内存地址。
+
+```go
+// 声明一个 字符串类型 的变量（默认初始化值为空字符串）。
+var v1 string
+
+// 声明一个 字符串的指针类型 的变量（默认初始化值为nil）。
+var v2 *string 
+
+var v3 int
+
+var v4 *int
+```
+
+```go
+// 声明一个 字符串类型 的变量，值为 武沛齐。
+var name string = "武沛齐"
+
+// 声明一个 字符串的指针类型 的变量，值为 name 对应的内存地址。
+var pointer *string = &name
+
+var age int = 18
+var x1 *int = &age
+```
+
+<img src="assets/image-20201030144654619.png" alt="image-20201030144654619" style="zoom:50%;" />
+
+
+
+### 3.1 指针的意义
+
+相当于创建了一个地址的`引用`，以后根据这个引用再去获取他里面的值。
+
+![image-20201030163932778](assets/image-20201030163932778.png)
+
+```go
+/*
+ @Author:武沛齐  微信号：wupeiqi666
+ @Description: 老男孩IT教育 & 路飞学城
+ @Video:  https://space.bilibili.com/283478842
+*/
+package main
+
+import "fmt"
+
+func main() {
+	v1 := "武沛齐"
+	v2 := &v1
+	fmt.Println(v1, v2, *v2) // 武沛齐 0xc00008e1e0 武沛齐
+  
+  v1 = "alex"
+  fmt.Println(v1, v2, *v2) // alex 0xc00008e1e0 alex
+}
+
+```
+
+
+
+### 3.2 指针的应用场景
+
+场景1：
+
+```go
+v1 := "武沛齐"
+v2 := v1
+v1 = "alex"
+
+fmt.Println(v1,v2) // alex 武沛齐
+```
+
+```go
+v1 := "武沛齐"
+v2 := &v1
+v1 = "alex"
+fmt.Println(v1,*v2) // alex  alex
+```
+
+<img src="assets/image-20201030170159212.png" alt="image-20201030170159212" style="zoom:50%;" />
+
+场景2：
+
+```go
+package main
+
+import "fmt"
+
+func changeData(data string) {
+	data = "哈哈哈哈哈"
+}
+
+func main() {
+	name := "武沛齐"
+  // 本质上会将name的值拷贝一份，并赋值给data
+	changeData(name)
+  fmt.Println(name) // 武沛齐
+}
+```
+
+```go
+package main
+
+import "fmt"
+
+func changeData(ptr *string) {
+	*ptr = "哈哈哈哈哈"
+}
+
+func main() {
+	name := "武沛齐"
+	changeData(&name)
+  fmt.Println(name) // 哈哈哈哈哈
+}
+```
+
+场景3：
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	var username string
+	fmt.Printf("请输入用户名：")
+	
+  // 提示用户输入，当用户输入之后，将输入的值赋值给内存地址对应的区域中。
+	fmt.Scanf("%s", &username)
+
+	if username == "武沛齐" {
+		fmt.Println("登录成功")
+	} else {
+		fmt.Println("登录失败")
+	}
+}
+```
+
+
+
+### 3.3 指针的指针
+
+```go
+name := "武沛齐"
+
+// 声明一个指针类型变量p1，内部存储name的内存地址
+var p1 *string = &name
+
+// 声明一个指针的指针类型变量p2，内部存储指针p1的内存地址
+var p2 **string = &p1
+
+// 声明一个指针的指针的指针类型变量p3，内部存储指针p2的内存地址
+var p3 ***string = &p2
+```
+
+<img src="assets/image-20201030172324426.png" alt="image-20201030172324426" style="zoom:50%;" />
+
+因为有指针的指针存在，所以在使用指针进行重置值时，也需要将相应的*号设置好，例如：
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+   name := "武沛齐"
+
+   // 声明一个指针类型变量p1，内部存储name的内存地址
+   var p1 *string = &name
+  
+   *p1 = "张三" // 将name的内存中的值由 武沛齐 改为 张三
+
+   // 声明一个指针的指针类型变量p2，内部存储指针p1的内存地址
+   var p2 **string = &p1
+   **p2 = "啦啦啦" // 将name的内存中的值由 张三 改为 啦啦啦
+
+   var p3 ***string = &p2
+   ***p3 = "我靠" // 将name的内存中的值由 啦啦啦 改为 我靠
+}
+```
+
+### 3.4 指针小高级操作
+
+- 数组的地址 == 数组的第一个元素的地址。
+  <img src="assets/image-20201030181305133.png" alt="image-20201030181305133" style="zoom:50%;" />
+
+  ```go
+  dataList := [3]int8{11, 22, 33}
+  
+  fmt.Printf("数组的地址：%p；数组第一个元素的地址：%p \n", &dataList, &dataList[0])
+  // &dataList 和 &dataList[0] 的内存中存储的数据虽然相同，但他们是两个不同类型的指针。
+  // &dataList 是 *[3]int8 类型
+  // &dataList[0] 是 *int8 类型
+  ```
+
+- 指针的计算
+
+  ```go
+  /*
+   @Author:武沛齐  微信号：wupeiqi666
+   @Description: 老男孩IT教育 & 路飞学城
+   @Video:  https://space.bilibili.com/283478842
+  */
+  package main
+  
+  import (
+  	"fmt"
+  	"unsafe"
+  )
+  
+  func main() {
+  
+  	dataList := [3]int8{11, 22, 33}
+  
+  	// 1.获取数组第一个元素的地址（指针）
+  	var firstDataPtr *int8 = &dataList[0]
+  
+  	// 2.转换成Pointer类型
+  	ptr := unsafe.Pointer(firstDataPtr)
+  
+  	// 3.转换成uintptr类型，然后进行内存地址的计算（即：地址加1个字节，意味着取第2个索引位置的值）。
+  	targetAddress := uintptr(ptr) + 1
+  
+  	// 4.根据新地址，重新转换成Pointer类型
+  	newPtr := unsafe.Pointer(targetAddress)
+  
+  	// 5.Pointer对象转换为 int8 指针类型
+  	value := (*int8)(newPtr)
+  
+  	// 6.根据指针获取值
+  	fmt.Println("最终结果为：", *value)
+  }
+  
+  ```
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
