@@ -75,7 +75,7 @@ fmt.Println(len(v1),cap(v1))
 data := make([]int,3)
 ```
 
-![image-20200620113636908](assets/image-20200620113636908.png)
+<img src="assets/image-20200620113636908.png" alt="image-20200620113636908" style="zoom:33%;" />
 
 ```go
 v1 := make([]int,1,3)
@@ -94,7 +94,7 @@ v3 := make([]int,1,3)
 v3 = append(v3,999)
 ```
 
-![image-20200620114104494](assets/image-20200620114104494.png)
+<img src="assets/image-20200620114104494.png" alt="image-20200620114104494" style="zoom:33%;" />
 
 
 
@@ -799,7 +799,7 @@ ftm.Println(v2) // {"n1":"wupeiqi","n2":"alex"}
 
 特别提醒：无论是否存在扩容都指向同一个地址。
 
-### 2.3 底层原理剖析
+### 2.3 Map底层原理剖析
 
 Golang中的Map有自己的一套实现原理，其核心是由`hmap`和`bmap`两个结构体实现。
 
