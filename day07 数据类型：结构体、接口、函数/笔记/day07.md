@@ -1371,6 +1371,527 @@ right := matrix.NewMatrix(...)  // 实例化 matrix 的唯一方式
 
 
 
+## 4.接口
+
+Go语言中的接口是一种特殊的数据类型，定义格式如下：
+
+```go
+type 接口名称 interface{
+    方法名称() 返回值
+}
+```
+
+
+
+例如：
+
+```go
+type Base interface {
+	f1()                   // 定义方法，无返回值
+	f2() int               // 定义方法，返回值int类型
+	f3() (int, bool)       // 定义方法，2个返回值分别是 int、bool类型
+	f4(n1 int, n2 int) int // 定义方法，需要两个参数，1个返回值
+}
+
+type empty interface {}  // interface{} 
+```
+
+接口中的方法只定义，不能编写具体的实现逻辑。
+
+
+
+### 4.1 接口的作用
+
+在程序开发中接口一般有两大作用：代指类型 & 约束。
+
+
+
+#### 4.1.1 空接口，代指任意类型
+
+示例1：
+
+```go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+// 定义空接口
+type Base interface {
+	
+}
+
+func main() {
+    //定义一个切片，内部可以存放任意类型。
+	dataList := make([]Base, 0)  // 推荐简写为：dataList := make([]interface{}, 0)
+    
+    // 切片中添加 字符串类型
+	dataList = append(dataList, "武沛齐")
+	// 切片中添加 整型
+	dataList = append(dataList, 18)
+    // 切片中添加 浮点型
+	dataList = append(dataList, 99.99)
+}
+```
+
+
+
+示例2：
+
+```go
+/*
+ @Author:武沛齐  微信号：wupeiqi666
+ @Video:  https://space.bilibili.com/283478842
+*/
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+type Person struct {
+	name string
+	age  int
+}
+
+func something(arg interface{}) {
+	fmt.Println(arg)
+}
+
+func main() {
+	something("武沛齐")
+	something(666)
+	something(4.15)
+	something(Person{name: "wupeiqi", age: 18})
+}
+```
+
+
+
+由于接口只是代指这些数据类型（在内部其实是转换为了接口类型），想要再获取数据中的值时，需要再将接口转换为指定的数据类型。
+
+```go
+/*
+ @Author:武沛齐  微信号：wupeiqi666
+ @Video:  https://space.bilibili.com/283478842
+*/
+package main
+
+import "fmt"
+
+type Person struct {
+	name string
+	age  int
+}
+
+func something(arg interface{}) {
+	// 接口转换为Person成功，ok=True；否则ok=True
+	tp, ok := arg.(Person)
+	if ok {
+		fmt.Println(tp.name, tp.age)
+	} else {
+		fmt.Println("转换失败")
+	}
+}
+
+func main() {
+	something(Person{name: "wupeiqi", age: 18})
+    something("武沛齐")
+}
+```
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+type Person struct {
+	name string
+	age  int
+}
+
+type Role struct {
+	title string
+	count int
+}
+
+func something(arg interface{}) {
+
+	// 多个类型转换，将arg接口对象转换为。（断言）
+	switch tp := arg.(type) {
+	case Person:
+		fmt.Println(tp.name)
+	case Role:
+		fmt.Println(tp.title)
+	case string:
+		fmt.Println(tp)
+	default:
+		fmt.Println(tp)
+	}
+}
+
+func main() {
+	something("武沛齐")
+	something(666)
+	something(4.15)
+	something(Person{name: "wupeiqi", age: 18})
+	something(Role{title: "管理员", count: 2})
+}
+```
+
+
+
+
+
+
+
+
+
+#### 4.1.2 非空接口，规范&约束
+
+一般定义非空接口，都是用于约束结构体中必须含有某个方法，例如：
+
+示例1：
+
+```go
+package main
+
+import "fmt"
+
+// 定义接口
+type IBase interface {
+	f1() int
+}
+
+// 定义结构体Person
+type Person struct {
+	name string
+}
+
+// 为结构体Person定义方法
+func (p Person) f1() int {
+	return 123
+}
+
+// 定义结构体User
+type User struct {
+	name string
+}
+
+// 为结构体User定义方法
+func (p User) f1() int {
+	return 666
+}
+
+// 基于接口的参数，可以实现传入多中类型（多态），也同时具有约束对象必须实现接口方法的功能
+func DoSomething(base IBase) {
+    result := base.f1() //直接调用  接口.f1()  -> 找到其对应的类型并执行其方法
+	fmt.Println(result)
+}
+
+func main() {
+
+	per := Person{name: "武沛齐"}
+	user := User{name: "wupeiqi"}
+
+	DoSomething(per)
+	DoSomething(user)
+}
+```
+
+
+
+示例2：
+
+```go
+package main
+
+import "fmt"
+
+// 定义接口
+type IBase interface {
+   f1() int
+}
+
+// 定义结构体
+type Person struct {
+   name string
+}
+
+// 为结构体定义方法
+func (p *Person) f1() int {
+   return 123
+}
+
+// 定义结构体
+type User struct {
+   name string
+}
+
+// 为结构体定义方法
+func (p *User) f1() int {
+   return 666
+}
+
+// 基于接口的参数，可以实现传入多中类型（多态），也同时具有约束对象必须实现接口方法的功能
+func DoSomething(base IBase) {
+   result := base.f1() // 由于base的约束，此处智能执行IBase中约束的接口。
+   fmt.Println(result)
+}
+
+func main() {
+
+   per := &Person{name: "武沛齐"} // 创建结构体对象并获取其指针对象
+   user := &User{name: "wupeiqi"}
+
+   DoSomething(per)
+   DoSomething(user)
+}
+```
+
+#### 练习题
+
+在项目中实现注册成功之后向用户发送：邮件、微信的消息提醒。
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+type IMessage interface {
+	send() bool
+}
+
+type Email struct {
+	email   string
+	content string
+}
+
+func (p *Email) send() bool {
+	fmt.Println("发送邮件提醒", p.email, p.content)
+	return true
+}
+
+type Wechat struct {
+	wid     string
+	content string
+}
+
+func (p *Wechat) send() bool {
+	fmt.Println("发送微信提醒", p.wid, p.content)
+	return true
+}
+
+func something(objectList []IMessage) {
+	for _, item := range objectList {
+		result := item.send()
+		fmt.Println(result)
+	}
+}
+
+func main() {
+	// 用户注册...
+	messageObjectList := []IMessage{
+		&Email{"wupeiqi@live.com", "注册成功"},
+		&Wechat{"wupeiqi@live.com", "注册成功"},
+	}
+	something(messageObjectList)
+}
+```
+
+
+
+
+
+
+
+### 4.2 底层实现
+
+#### 4.2.1 空接口
+
+接口是Go的一种数据类型，在上文也已经了解到Go的空接口可以代指任意类型，从而实现参数、”容器“中可以处理多种数据类型。
+
+Go语言底层对空接口的实现：
+
+```go
+type eface struct {
+   _type *_type			// 存储类型相关信息
+   data  unsafe.Pointer // 存储数据
+}
+```
+
+如果在代码中出现`其他对象`赋值给空接口，其实就是将其他对象相关的值存放到eface的 `_type`和`data`中，内部源码：
+
+```go
+// The conv and assert functions below do very similar things.
+// The convXXX functions are guaranteed by the compiler to succeed.
+// The assertXXX functions may fail (either panicking or returning false,
+// depending on whether they are 1-result or 2-result).
+// The convXXX functions succeed on a nil input, whereas the assertXXX
+// functions fail on a nil input.
+
+func convT2E(t *_type, elem unsafe.Pointer) (e eface) {
+   if raceenabled {
+      raceReadObjectPC(t, elem, getcallerpc(), funcPC(convT2E))
+   }
+   if msanenabled {
+      msanread(elem, t.size)
+   }
+   x := mallocgc(t.size, t, true)
+   // TODO: We allocate a zeroed object only to overwrite it with actual data.
+   // Figure out how to avoid zeroing. Also below in convT2Eslice, convT2I, convT2Islice.
+   typedmemmove(t, x, elem)
+   e._type = t
+   e.data = x
+   return
+}
+```
+
+![image-20200511153726162](assets/image-20200511153726162.png)
+
+注意：`_type`是一个结构体内部存储挺多的信息，这里统称为类型相关的信息。
+
+
+
+示例1：
+
+```go
+package main
+
+func main() {
+	num := 666
+	var object interface{}
+	// 将num的类型int存储到 _type 中；值8存储到data中
+	object = num
+}
+```
+
+示例2：
+
+```go
+package main
+
+func DoSomething(arg interface{}) {
+   // 将 num的类型int 存储到 _type 中；值8存储到data中;
+}
+
+func main() {
+   num := 666
+   DoSomething(num)
+}
+```
+
+示例3：
+
+```go
+package main
+
+type Person struct {
+   name string
+   age  int
+}
+
+func DoSomething(arg interface{}) {
+   // 将 info的类型Person 存储到 _type 中；值{name: "武沛齐", age: 18}存储到data中;
+}
+
+func main() {
+   info := Person{name: "武沛齐", age: 18}
+   DoSomething(info)
+}
+```
+
+
+
+#### 4.2.2 非空接口
+
+非空接口会定义一些方法来实现约束，所以在底层实现和空接口有些不同。
+
+```go
+type iface struct {
+   tab  *itab           // 类型和方法相关
+   data unsafe.Pointer  // 数据
+}
+
+type itab struct {
+	inter *interfacetype // 接口信息，如：接口中定义的方法。
+	_type *_type         // 类型
+	hash  uint32
+	_     [4]byte
+	fun   [1]uintptr
+}
+
+type interfacetype struct {
+	typ     _type
+	pkgpath name
+	mhdr    []imethod   // 接口的方法
+}
+```
+
+![image-20200511180244891](assets/image-20200511180244891.png)
+
+
+
+## 总结
+
+Go语言中常见的数据类型有很多，例如：
+
+- <span style="color:gray">整型，用于表示整数。</span>
+- <span style="color:gray">浮点型，用于表示小数。</span>
+- <span style="color:gray">布尔型，用于表示真/假。</span>
+- <span style="color:gray">字符串，用于表示文本信息。</span>
+- <span style="color:gray">数组，用于表示多个数据（数据集合）</span>
+- <span style="color:gray">指针，用于表示内存地址的类型。</span>
+- <span style="color:gray">切片，用于表示多个数据（数据集合）</span>
+- <span style="color:gray">字典，用于表示键值对结合。</span>
+- <span style="color:gray">结构体，用于自定义一些数据集合。</span>
+- <span style="color:gray">接口，用于约束和泛指数据类型。</span>
+
+
+
+除此之外，还学习 函数，以及为结构体定义方法。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
